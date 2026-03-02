@@ -1,0 +1,3 @@
+0 schuhe
+1 flasche
+2 pullover
