@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 
 # =============================
-# STREAMLIT CONFIG
+# SEITEN KONFIGURATION
 # =============================
 st.set_page_config(page_title="Digitales Fundbüro", layout="wide")
 st.title("🔎 Digitales Fundbüro")
@@ -19,7 +19,7 @@ if not os.path.exists("uploads"):
     os.makedirs("uploads")
 
 # =============================
-# DATENBANK VERBINDUNG
+# DATENBANK
 # =============================
 conn = sqlite3.connect("fundbuero.db", check_same_thread=False)
 c = conn.cursor()
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS claims (
 conn.commit()
 
 # =============================
-# MODELL LADEN (TEACHABLE MACHINE)
+# MODELL LADEN
 # =============================
 @st.cache_resource
 def load_model_and_labels():
@@ -58,16 +58,20 @@ def load_model_and_labels():
 model, class_names = load_model_and_labels()
 
 # =============================
-# SIDEBAR NAVIGATION
+# STARTAUSWAHL
 # =============================
-menu = st.sidebar.selectbox("Menü", ["Fund hochladen", "Funde durchsuchen"])
+choice = st.radio(
+    "Was möchtest du tun?",
+    ["📸 Ich möchte einen Fund hochladen",
+     "🔍 Ich suche einen verlorenen Gegenstand"]
+)
 
 # ==========================================================
-# 1️⃣ FUND HOCHLADEN
+# 📸 FUND HOCHLADEN
 # ==========================================================
-if menu == "Fund hochladen":
+if "hochladen" in choice:
 
-    st.header("📸 Neuen Fund hochladen")
+    st.header("📸 Fund hochladen")
 
     uploaded_file = st.file_uploader("Bild auswählen", type=["jpg", "jpeg", "png"])
 
@@ -80,7 +84,6 @@ if menu == "Fund hochladen":
         size = (224, 224)
         image_resized = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
         image_array = np.asarray(image_resized)
-
         normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
 
         data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
@@ -107,15 +110,14 @@ if menu == "Fund hochladen":
             """, (filename, class_name, confidence_score, datetime.now()))
 
             conn.commit()
-
-            st.success("✅ Fund erfolgreich gespeichert!")
+            st.success("✅ Fund wurde gespeichert!")
 
 # ==========================================================
-# 2️⃣ FUNDE DURCHSUCHEN
+# 🔍 FUND SUCHEN
 # ==========================================================
-if menu == "Funde durchsuchen":
+if "suche" in choice.lower() or "verlorenen" in choice.lower():
 
-    st.header("🔍 Funde durchsuchen")
+    st.header("🔍 Gefundene Gegenstände durchsuchen")
 
     categories = ["Alle", "Flasche", "Schuhe", "Pullover"]
     selected_category = st.selectbox("Kategorie filtern", categories)
@@ -141,27 +143,23 @@ if menu == "Funde durchsuchen":
             st.write(f"**Sicherheit:** {round(confidence * 100, 2)} %")
 
             email = st.text_input(
-                f"E-Mail eingeben, wenn es dir gehört (ID {item_id})",
+                f"Deine E-Mail, falls es dir gehört (ID {item_id})",
                 key=f"email_{item_id}"
             )
 
             if st.button(f"Anspruch senden für ID {item_id}"):
 
                 if email:
-
                     c.execute("""
                         INSERT INTO claims (item_id, email, date)
                         VALUES (?, ?, ?)
                     """, (item_id, email, datetime.now()))
 
                     conn.commit()
-
-                    st.success("📧 Anspruch wurde registriert!")
-
+                    st.success("📧 Dein Anspruch wurde registriert!")
                 else:
-                    st.error("Bitte eine gültige E-Mail eingeben.")
+                    st.error("Bitte eine E-Mail eingeben.")
 
             st.markdown("---")
-
     else:
-        st.info("Keine Funde vorhanden.")
+        st.info("Derzeit keine Funde gespeichert.")
