@@ -7,13 +7,35 @@ import os
 from datetime import datetime
 
 # =============================
-# SEITEN KONFIGURATION
+# LOGO LADEN
 # =============================
-st.set_page_config(page_title="Digitales Fundbüro", layout="wide")
-st.title("🔎 Digitales Fundbüro")
+logo = Image.open("logo.png")
+
+st.set_page_config(
+    page_title="Digitales Fundbüro",
+    page_icon=logo,
+    layout="wide"
+)
+
+# Hintergrund etwas heller
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #f5f5f5;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Logo zentriert anzeigen
+col1, col2, col3 = st.columns([1,2,1])
+with col2:
+    st.image(logo, width=220)
+
+st.markdown("<h1 style='text-align: center;'>Digitales Fundbüro</h1>", unsafe_allow_html=True)
+st.markdown("---")
 
 # =============================
-# ORDNER ERSTELLEN
+# UPLOAD ORDNER ERSTELLEN
 # =============================
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
@@ -62,16 +84,16 @@ model, class_names = load_model_and_labels()
 # =============================
 choice = st.radio(
     "Was möchtest du tun?",
-    ["📸 Ich möchte einen Fund hochladen",
-     "🔍 Ich suche einen verlorenen Gegenstand"]
+    ["📸 Fund hochladen", "🔍 Fund suchen"],
+    horizontal=True
 )
 
 # ==========================================================
 # 📸 FUND HOCHLADEN
 # ==========================================================
-if "hochladen" in choice:
+if choice == "📸 Fund hochladen":
 
-    st.header("📸 Fund hochladen")
+    st.subheader("Neuen Fund registrieren")
 
     uploaded_file = st.file_uploader("Bild auswählen", type=["jpg", "jpeg", "png"])
 
@@ -110,14 +132,14 @@ if "hochladen" in choice:
             """, (filename, class_name, confidence_score, datetime.now()))
 
             conn.commit()
-            st.success("✅ Fund wurde gespeichert!")
+            st.success("✅ Fund erfolgreich gespeichert!")
 
 # ==========================================================
 # 🔍 FUND SUCHEN
 # ==========================================================
-if "suche" in choice.lower() or "verlorenen" in choice.lower():
+if choice == "🔍 Fund suchen":
 
-    st.header("🔍 Gefundene Gegenstände durchsuchen")
+    st.subheader("Gefundene Gegenstände durchsuchen")
 
     categories = ["Alle", "Flasche", "Schuhe", "Pullover"]
     selected_category = st.selectbox("Kategorie filtern", categories)
