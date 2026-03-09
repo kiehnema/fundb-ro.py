@@ -119,7 +119,6 @@ if choice == "📸 Fund hochladen":
         image = Image.open(uploaded_file).convert("RGB")
         st.image(image, caption="Hochgeladenes Bild", use_column_width=True)
 
-        # Bild vorbereiten
         size = (224, 224)
 
         image_resized = ImageOps.fit(
@@ -135,7 +134,6 @@ if choice == "📸 Fund hochladen":
         data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
         data[0] = normalized_image_array
 
-        # KI Vorhersage
         prediction = model.predict(data)
 
         index = np.argmax(prediction)
@@ -177,7 +175,6 @@ if choice == "🔍 Fund suchen":
 
     st.subheader("Gefundene Gegenstände durchsuchen")
 
-    # Kategorien automatisch aus DB laden
     c.execute("SELECT DISTINCT category FROM items")
     db_categories = [row[0] for row in c.fetchall()]
 
@@ -220,9 +217,6 @@ if choice == "🔍 Fund suchen":
             st.write(f"**Datum:** {date_str}")
 
             st.write(f"**Sicherheit:** {round(confidence * 100, 2)} %")
-
-            if confidence < 0.6:
-                st.warning("⚠️ Unsichere KI-Erkennung")
 
             email = st.text_input(
                 f"Deine E-Mail, falls es dir gehört (ID {item_id})",
