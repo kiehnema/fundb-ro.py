@@ -16,18 +16,39 @@ st.set_page_config(
 )
 
 # =============================
-# HINTERGRUND STYLING
+# DESIGN / CSS
 # =============================
 st.markdown("""
 <style>
+
 .stApp {
-    background-color: #f5f5f5;
+    background-color: #f4f6f8;
 }
+
+h1 {
+    text-align:center;
+}
+
+div.stButton > button {
+    width:100%;
+    height:55px;
+    font-size:18px;
+    border-radius:10px;
+}
+
+.card {
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0px 4px 12px rgba(0,0,0,0.08);
+    margin-bottom:25px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 # =============================
-# LOGO ZENTRIERT ANZEIGEN
+# LOGO ZENTRIERT
 # =============================
 def display_logo():
 
@@ -37,7 +58,7 @@ def display_logo():
     st.markdown(
         f"""
         <div style="text-align:center;">
-            <img src="data:image/png;base64,{data}" width="220">
+            <img src="data:image/png;base64,{data}" width="200">
         </div>
         """,
         unsafe_allow_html=True
@@ -45,11 +66,11 @@ def display_logo():
 
 display_logo()
 
-st.markdown("<h1 style='text-align: center;'>Digitales Fundbüro</h1>", unsafe_allow_html=True)
+st.markdown("<h1>Digitales Fundbüro</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
 # =============================
-# UPLOAD ORDNER ERSTELLEN
+# UPLOAD ORDNER
 # =============================
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
@@ -86,6 +107,7 @@ conn.commit()
 # =============================
 @st.cache_resource
 def load_model_and_labels():
+
     model = tf.keras.models.load_model("keras_model.h5", compile=False)
 
     with open("labels.txt", "r") as f:
@@ -97,7 +119,7 @@ def load_model_and_labels():
 model, class_names = load_model_and_labels()
 
 # =============================
-# STARTAUSWAHL
+# NAVIGATION
 # =============================
 choice = st.radio(
     "Was möchtest du tun?",
@@ -117,6 +139,7 @@ if choice == "📸 Fund hochladen":
     if uploaded_file is not None:
 
         image = Image.open(uploaded_file).convert("RGB")
+
         st.image(image, caption="Hochgeladenes Bild", use_column_width=True)
 
         size = (224, 224)
@@ -134,7 +157,8 @@ if choice == "📸 Fund hochladen":
         data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
         data[0] = normalized_image_array
 
-        prediction = model.predict(data)
+        with st.spinner("🔍 Gegenstand wird analysiert..."):
+            prediction = model.predict(data)
 
         index = np.argmax(prediction)
 
@@ -143,7 +167,6 @@ if choice == "📸 Fund hochladen":
         confidence_score = float(prediction[0][index])
 
         st.success(f"Erkannt: {class_name}")
-
         st.write(f"Sicherheit: {round(confidence_score * 100, 2)} %")
 
         if st.button("Im Fundbüro speichern"):
@@ -187,10 +210,7 @@ if choice == "🔍 Fund suchen":
 
     if selected_category == "Alle":
 
-        c.execute("""
-        SELECT * FROM items
-        ORDER BY date DESC
-        """)
+        c.execute("SELECT * FROM items ORDER BY date DESC")
 
     else:
 
@@ -208,7 +228,9 @@ if choice == "🔍 Fund suchen":
 
             item_id, filename, category, confidence, date = item
 
-            st.image(Image.open(filename), width=250)
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+
+            st.image(Image.open(filename), use_column_width=True)
 
             st.write(f"**Kategorie:** {category}")
 
@@ -257,7 +279,7 @@ if choice == "🔍 Fund suchen":
 
                     st.error("Bitte eine E-Mail eingeben.")
 
-            st.markdown("---")
+            st.markdown("</div>", unsafe_allow_html=True)
 
     else:
 
